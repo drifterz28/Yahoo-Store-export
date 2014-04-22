@@ -2,7 +2,6 @@
 // Module dependencies
 var fs = require('fs');
 var http = require('http');
-var request = require('request');
 var xml2js = require('xml2js');
 var prettyjson = require('prettyjson');
 
@@ -16,7 +15,7 @@ if(storeID === undefined) {
     process.exit();
 }
 // build catalog url
-var url = 'http://store.yahoo.com/' + storeID + '/catalog.xml';
+var url = 'store.yahoo.com/' + storeID + '/catalog.xml';
 
 // functions
 function createDIR(foldername){
@@ -32,12 +31,12 @@ function createDIR(foldername){
         console.log('Folder ' + foldername + ' exists');
     }
 }
-function createJson(filename, content) {
-    fs.writeFile(storeID + '/' + filename, JSON.stringify(content), function(err) {
+function createFile(filename, content) {
+    fs.writeFile(storeID + '/' + filename, content, function(err) {
         if(err) {
             console.log(err);
         } else {
-            console.log(filename + ' was saved!');
+            console.log(filename + ' was created and saved!');
         }
     });
 }
@@ -57,20 +56,24 @@ function betterJson(obj, key, value) {
     return json;
 }
 
-/*
-function copyFile (url, ) {
-    http.get('http://localhost/get', function (err, res) {
-    if (err) {
-        console.error(err);
-        return;
-    }
 
-    console.log(res.code, res.headers, res.buffer.toString());
+createDIR(storeID);
+createDIR(storeID + '/images');
+createFile('catalog.xml', '');
+//
+http.get('http://store.yahoo.com/' + storeID + '/catalog.xml', function(res) {
+    res.setEncoding('utf8');
+    res.on('data', function (chunk){
+        fs.appendFile(storeID + '/catalog.xml', chunk, function(err){
+            if(err) {
+                console.log(err);
+            }
+        });
     });
-}
-*/
+    console.log('catalog.xml done saving!');
+});
 
-
+/*
 request.get(url, function(error, request, body) {
     // Parse XML data from body
     parser.parseString(body, function(err, parsedXml) {
@@ -95,6 +98,7 @@ request.get(url, function(error, request, body) {
 
     });
 });
+*/
 
 
 

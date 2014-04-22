@@ -1,5 +1,5 @@
 {
-  "name": "Yahoo Store Export",
+  "name": "Yahoo-Store-Export",
   "version": "0.0.1",
   "description": "\"Export a yahoo store to Json, download images create CSV for use elsewhere or in another Yahoo store\"",
   "main": "index.js",
@@ -7,5 +7,13 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "E-comm Solution",
-  "license": "MPL 2.0"
+  "license": "MPL 2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/drifterz28/Yahoo-Store-export"
+  },
+  "dependencies": {
+    "xml2js": "^0.4.2",
+    "prettyjson": "^1.0.0"
+  }
 }
