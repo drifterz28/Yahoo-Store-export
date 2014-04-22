@@ -1,11 +1,11 @@
 {
-  "name": "xml2json",
-  "version": "0.0.0",
-  "description": "\"Yahoo store XML to json\"",
+  "name": "Yahoo Store Export",
+  "version": "0.0.1",
+  "description": "\"Export a yahoo store to Json, download images create CSV for use elsewhere or in another Yahoo store\"",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "E-comm Solution",
-  "license": "ISC"
+  "license": "MPL 2.0"
 }
