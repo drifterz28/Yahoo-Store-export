@@ -56,26 +56,7 @@ function betterJson(obj, key, value) {
     return json;
 }
 
-
-createDIR(storeID);
-createDIR(storeID + '/images');
-createFile('catalog.xml', '');
-//
-http.get('http://store.yahoo.com/' + storeID + '/catalog.xml', function(res) {
-    res.setEncoding('utf8');
-    res.on('data', function (chunk){
-        fs.appendFile(storeID + '/catalog.xml', chunk, function(err){
-            if(err) {
-                console.log(err);
-            }
-        });
-    });
-    console.log('catalog.xml done saving!');
-});
-
-/*
-request.get(url, function(error, request, body) {
-    // Parse XML data from body
+function startXmlParse() {
     parser.parseString(body, function(err, parsedXml) {
         var catalog = parsedXml.Catalog;
         //console.log(catalog);
@@ -95,10 +76,27 @@ request.get(url, function(error, request, body) {
         ////console.log(table[0].TableFieldArray);
         ////createJson(tablename + '.json', betterJson(table[0], 'ID', 'Type'));
         //console.log(prettyjson.render(betterJson(table[0], 'ID', 'Type')));
-
     });
+}
+
+createDIR(storeID);
+createDIR(storeID + '/images');
+createFile('catalog.xml', '');
+//
+http.get('http://store.yahoo.com/' + storeID + '/catalog.xml', function(res) {
+    res.setEncoding('utf8');
+    res.on('data', function (chunk){
+        fs.appendFile(storeID + '/catalog.xml', chunk, function(err){
+            if(err) {
+                console.log(err);
+            }
+        });
+    });
+    console.log('catalog.xml done saving!');
+    startXmlParse();
 });
-*/
+
+
 
 
 
