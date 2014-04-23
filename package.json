@@ -6,6 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "engines": {
+    "node": ">=0.10.0"
+  },
   "author": "E-comm Solution",
   "license": "MPL 2.0",
   "repository": {
@@ -14,6 +17,7 @@
   },
   "dependencies": {
     "xml2js": "^0.4.2",
-    "prettyjson": "^1.0.0"
+    "prettyjson": "^1.0.0",
+    "underscore": "^1.6.0"
   }
 }

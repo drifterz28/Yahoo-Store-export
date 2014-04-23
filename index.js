@@ -3,9 +3,11 @@
 // Module dependencies
 var fs = require('fs');
 var http = require('http');
+var _ = require('underscore');
 var parseString = require('xml2js').parseString;
 var prettyjson = require('prettyjson');
-
+// pretty json example
+//console.log(prettyjson.render(json[x]));
 var storeID = process.argv[2];
 
 // Action options
@@ -13,7 +15,6 @@ var storeID = process.argv[2];
 // update - same as new
 // rebuld - will rebuild all files but not redownload catalog.xml
 // images - will only download images from current files
-
 var actions = process.argv[3] || 'new';
 
 // abort if missing store id
@@ -22,7 +23,7 @@ if(storeID === undefined) {
     process.exit();
 }
 // build catalog url
-var url = 'store.yahoo.com/' + storeID + '/catalog.xml';
+var url = 'http://store.yahoo.com/' + storeID + '/catalog.xml';
 
 // functions
 function createDIR(foldername){
@@ -60,20 +61,17 @@ function betterJson(obj, key, value) {
             json[obj[y][x].$[key]] = newObj;
         }
     }
-
     return json;
 }
 
-function get_file(file) {
-    var filename = file.split('/').pop();
-
-
-    http.get(file, destFolder + filename, function (error, result) {
-        if (error) {
-            console.error(error);
-        } else {
-            console.log('File downloaded at: ' + result.file);
-        }
+function getFile(url, dest, callback) {
+    var file = fs.createWriteStream(dest);
+    var request = http.get(url, function(response) {
+        response.pipe(file);
+        file.on('finish', function() {
+            console.log('File downloaded to '+ dest);
+            file.close(callback);
+        });
     });
 }
 
@@ -86,37 +84,31 @@ function startXmlParse() {
             }
             var catalog = parsedXml.Catalog;
             console.log(catalog);
-            //var storeInfo = catalog.$;
-            //var table = catalog.Table;
-            //var items = catalog.Item;
-            //console.log(storeInfo);
-            //createFile('storeinfo.json', JSON.stringify(storeInfo));
-            //createFile('tables.json', JSON.stringify(table));
-            //createFile('items.json', JSON.stringify(items));
-
-            //var tablename = table[0].$.ID.replace('.', '');
-            ////for(){
-            ////    console.log(prettyjson.render(items[0]));
-            ////}
-            ////console.log(prettyjson.render(table[0].TableFieldArray));
-            ////console.log(table[0].TableFieldArray);
-            ////createJson(tablename + '.json', betterJson(table[0], 'ID', 'Type'));
-            //console.log(prettyjson.render(betterJson(table[0], 'ID', 'Type')));
+            var storeInfo = catalog.$;
+            var table = catalog.Table;
+            var items = catalog.Item;
+            createFile('catalog.json', JSON.stringify(parsedXml));
+            createFile('storeinfo.json', JSON.stringify(storeInfo));
+            createFile('tables.json', JSON.stringify(table));
+            createFile('items.json', JSON.stringify(items));
         });
     });
 }
-function getCatalog(){
-    http.get('http://store.yahoo.com/' + storeID + '/catalog.xml', function(res) {
-        res.setEncoding('utf8');
-        res.on('data', function (chunk){
-            fs.appendFile(storeID + '/catalog.xml', chunk, function(err){
-                if(err) {
-                    console.log(err);
+
+function grabImageFields() {
+    var tables = storeID + '/tables.json';
+    fs.readFile(tables, 'utf8', function (err, data){
+        var json = JSON.parse(data);
+        var imageFields = [];
+
+        for (var x = 0; x < json.length; x++){
+            _.each(json[x].TableField, function (field){
+                if (field.$.Type === 'image'){
+                    imageFields.push(field.$.ID);
                 }
             });
-        });
-        console.log('catalog.xml done saving!');
-        startXmlParse();
+        }
+        console.log(imageFields.join(' '));
     });
 }
 
@@ -124,14 +116,16 @@ buildActions = {
     newXML: function (){
         createDIR(storeID);
         createDIR(storeID + '/images');
-        createFile('catalog.xml', ''); // clear file to append new data
-        getCatalog();
+        getFile(url, storeID + '/catalog.xml', startXmlParse);
     },
     updateXML: function (){
         this.new();
     },
     rebuildXML: function () {
         startXmlParse();
+    },
+    imagesXML: function () {
+        grabImageFields();
     }
 }
 
