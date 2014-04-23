@@ -31,6 +31,7 @@ function createDIR(foldername){
         console.log('Folder ' + foldername + ' exists');
     }
 }
+
 function createFile(filename, content) {
     fs.writeFile(storeID + '/' + filename, content, function(err) {
         if(err) {
@@ -56,8 +57,22 @@ function betterJson(obj, key, value) {
     return json;
 }
 
+function get_file(file) {
+    var filename = file.split('/').pop();
+
+
+    http.get(file, destFolder + filename, function (error, result) {
+        if (error) {
+            console.error(error);
+        } else {
+            console.log('File downloaded at: ' + result.file);
+        }
+    });
+}
+
 function startXmlParse() {
-    parser.parseString(body, function(err, parsedXml) {
+    var xml = require(storeID + '/catalog.xml');
+    parser.parseString(xml, function(err, parsedXml) {
         var catalog = parsedXml.Catalog;
         //console.log(catalog);
         var storeInfo = catalog.$;
@@ -82,7 +97,7 @@ function startXmlParse() {
 createDIR(storeID);
 createDIR(storeID + '/images');
 createFile('catalog.xml', '');
-//
+
 http.get('http://store.yahoo.com/' + storeID + '/catalog.xml', function(res) {
     res.setEncoding('utf8');
     res.on('data', function (chunk){
