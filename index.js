@@ -1,13 +1,20 @@
 /* global require, console, response, process */
+// test site yhst-136468114953641
 // Module dependencies
 var fs = require('fs');
 var http = require('http');
-var xml2js = require('xml2js');
+var parseString = require('xml2js').parseString;
 var prettyjson = require('prettyjson');
 
-// xml2js parser instance
-var parser = new xml2js.Parser();
 var storeID = process.argv[2];
+
+// Action options
+// new - starts everything from scratch
+// update - same as new
+// rebuld - will rebuild all files but not redownload catalog.xml
+// images - will only download images from current files
+
+var actions = process.argv[3] || 'new';
 
 // abort if missing store id
 if(storeID === undefined) {
@@ -71,45 +78,64 @@ function get_file(file) {
 }
 
 function startXmlParse() {
-    var xml = require(storeID + '/catalog.xml');
-    parser.parseString(xml, function(err, parsedXml) {
-        var catalog = parsedXml.Catalog;
-        //console.log(catalog);
-        var storeInfo = catalog.$;
-        var table = catalog.Table;
-        var items = catalog.Item;
-        //console.log(storeInfo);
-        createJson('storeinfo.json', storeInfo);
-        createJson('tables.json', table);
-        createJson('items.json', items);
+    var xml = storeID + '/catalog.xml';
+    fs.readFile(xml, 'utf8', function (err, data){
+        parseString(data, function(err, parsedXml) {
+            if(err){
+                console.log(err);
+            }
+            var catalog = parsedXml.Catalog;
+            console.log(catalog);
+            //var storeInfo = catalog.$;
+            //var table = catalog.Table;
+            //var items = catalog.Item;
+            //console.log(storeInfo);
+            //createFile('storeinfo.json', JSON.stringify(storeInfo));
+            //createFile('tables.json', JSON.stringify(table));
+            //createFile('items.json', JSON.stringify(items));
 
-        //var tablename = table[0].$.ID.replace('.', '');
-        ////for(){
-        ////    console.log(prettyjson.render(items[0]));
-        ////}
-        ////console.log(prettyjson.render(table[0].TableFieldArray));
-        ////console.log(table[0].TableFieldArray);
-        ////createJson(tablename + '.json', betterJson(table[0], 'ID', 'Type'));
-        //console.log(prettyjson.render(betterJson(table[0], 'ID', 'Type')));
+            //var tablename = table[0].$.ID.replace('.', '');
+            ////for(){
+            ////    console.log(prettyjson.render(items[0]));
+            ////}
+            ////console.log(prettyjson.render(table[0].TableFieldArray));
+            ////console.log(table[0].TableFieldArray);
+            ////createJson(tablename + '.json', betterJson(table[0], 'ID', 'Type'));
+            //console.log(prettyjson.render(betterJson(table[0], 'ID', 'Type')));
+        });
+    });
+}
+function getCatalog(){
+    http.get('http://store.yahoo.com/' + storeID + '/catalog.xml', function(res) {
+        res.setEncoding('utf8');
+        res.on('data', function (chunk){
+            fs.appendFile(storeID + '/catalog.xml', chunk, function(err){
+                if(err) {
+                    console.log(err);
+                }
+            });
+        });
+        console.log('catalog.xml done saving!');
+        startXmlParse();
     });
 }
 
-createDIR(storeID);
-createDIR(storeID + '/images');
-createFile('catalog.xml', '');
+buildActions = {
+    newXML: function (){
+        createDIR(storeID);
+        createDIR(storeID + '/images');
+        createFile('catalog.xml', ''); // clear file to append new data
+        getCatalog();
+    },
+    updateXML: function (){
+        this.new();
+    },
+    rebuildXML: function () {
+        startXmlParse();
+    }
+}
 
-http.get('http://store.yahoo.com/' + storeID + '/catalog.xml', function(res) {
-    res.setEncoding('utf8');
-    res.on('data', function (chunk){
-        fs.appendFile(storeID + '/catalog.xml', chunk, function(err){
-            if(err) {
-                console.log(err);
-            }
-        });
-    });
-    console.log('catalog.xml done saving!');
-    startXmlParse();
-});
+buildActions[actions+'XML']();
 
 
 
